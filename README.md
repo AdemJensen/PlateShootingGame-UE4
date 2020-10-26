@@ -5,10 +5,10 @@
 尊敬的评审，您好，当您看到这条消息，表明您手中的这份仓库的资源还处在未完成的状态，非常抱歉！
 如果您愿意查看本项目的完全体，请执行 Pull 操作获取最新代码，非常感谢！
 
-- 演示视频（临时）：[https://share.weiyun.com/rlcJM7Ca](https://share.weiyun.com/rlcJM7Ca)
+- 演示视频（旧版）：[https://share.weiyun.com/rlcJM7Ca](https://share.weiyun.com/rlcJM7Ca)
 - 安装包-安卓：[https://share.weiyun.com/7Hhsj6Q5](https://share.weiyun.com/7Hhsj6Q5)
 - 安装包-Windows：<N/A>
-- 安装包-OSX：<N/A>
+- 安装包-OSX：[https://share.weiyun.com/vcVxDRB5](https://share.weiyun.com/vcVxDRB5)
 
 ## 简介
 本游戏是基于 Epic Games 官方提供的“多人射击游戏”进行开发的，因此本身自带网络联机功能。
