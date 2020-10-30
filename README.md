@@ -8,7 +8,7 @@
 - 安装包-Windows：[https://share.weiyun.com/usXu4Onw](https://share.weiyun.com/usXu4Onw)
 - 安装包-OSX：[https://share.weiyun.com/vcVxDRB5](https://share.weiyun.com/vcVxDRB5)
 
-提示：由于未知原因，演示视频在线播放可能显示全部黑屏，请先等待播放页面完成缓存，或者直接下载视频观看，给您带来的不便还请谅解。
+提示：已知在新版Edge浏览器（Chromium内核版）上播放演示视频可能显示全部黑屏，请更换其他浏览器（已测试IE、Firefox、Chrome均正常），或者直接下载视频观看，给您带来的不便还请谅解。
 
 ## 简介
 本游戏是基于 Epic Games 官方提供的“多人射击游戏”进行开发的，因此本身自带网络联机功能。
