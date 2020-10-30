@@ -3,6 +3,7 @@
 
 ## 资源链接
 - 演示视频：[https://share.weiyun.com/qisME9Zy](https://share.weiyun.com/qisME9Zy)
+- 演示视频（备用地址）：[https://pan.baidu.com/s/1Up3hJM5eVVK7PAxUopcbTw](https://pan.baidu.com/s/1Up3hJM5eVVK7PAxUopcbTw)，分享码 `6666`。
 - 安装包-安卓：[https://share.weiyun.com/7Hhsj6Q5](https://share.weiyun.com/7Hhsj6Q5)
 - 安装包-Windows：[https://share.weiyun.com/usXu4Onw](https://share.weiyun.com/usXu4Onw)
 - 安装包-OSX：[https://share.weiyun.com/vcVxDRB5](https://share.weiyun.com/vcVxDRB5)
