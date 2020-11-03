@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.YourCompany.S_MultiplayShooting;
+package com.YourCompany.PlateShootingGame;
 
 import com.android.vending.expansion.zipfile.ZipResourceFile;
 import com.android.vending.expansion.zipfile.ZipResourceFile.ZipEntryRO;

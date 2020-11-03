@@ -1,10 +1,10 @@
 package com.epicgames.ue4;
 
-import com.YourCompany.S_MultiplayShooting.OBBDownloaderService;
-import com.YourCompany.S_MultiplayShooting.DownloaderActivity;
+import com.YourCompany.PlateShootingGame.OBBDownloaderService;
+import com.YourCompany.PlateShootingGame.DownloaderActivity;
 import android.app.Activity;
 import com.google.android.vending.expansion.downloader.Helpers;
-import com.YourCompany.S_MultiplayShooting.OBBData;
+import com.YourCompany.PlateShootingGame.OBBData;
 
 
 public class DownloadShim

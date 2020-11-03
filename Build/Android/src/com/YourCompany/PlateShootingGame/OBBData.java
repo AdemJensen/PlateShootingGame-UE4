@@ -1,4 +1,4 @@
-package com.YourCompany.S_MultiplayShooting;
+package com.YourCompany.PlateShootingGame;
 
 public class OBBData
 {
@@ -19,7 +19,7 @@ public static final XAPKFile[] xAPKS = {
 new XAPKFile(
 true, // true signifies a main file
 "1", // the version of the APK that the file was uploaded against
-71284318L // the length of the file in bytes
+71283690L // the length of the file in bytes
 )
 };
 };

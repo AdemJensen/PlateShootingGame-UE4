@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.YourCompany.S_MultiplayShooting;
+package com.YourCompany.PlateShootingGame;
 
 import com.google.android.vending.expansion.downloader.DownloaderClientMarshaller;
 
