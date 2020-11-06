@@ -11,7 +11,7 @@ void UMySaveGame::InsertPlayerRecordRanking(FString PlayerNickname, int32 Score)
     }
     else
     {
-        Rankings[PlayerNickname] = Score;
+        Rankings.Add(PlayerNickname, Score);
     }
 }
 
