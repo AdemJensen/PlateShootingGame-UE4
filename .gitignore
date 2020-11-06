@@ -14,3 +14,5 @@ Saved
 *.suo
 *.xcodeproj
 *.xcworkspace
+*.log
+.idea
