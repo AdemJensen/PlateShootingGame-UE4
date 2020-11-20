@@ -2,11 +2,13 @@
 使用 UE4 开发的一款打靶小游戏，腾讯游戏开发公开课作业2、3。
 
 ## 更新记录
+- Update 2020-11-20：完成了人物动作动画。
 - Update 2020-11-06：完成了手机端操作按钮及UI，添加排行榜、昵称修改面板等。
 
 ## 资源链接
-- 演示视频：[https://share.weiyun.com/yVpAOueP](https://share.weiyun.com/yVpAOueP)
-- 安装包-安卓：[https://share.weiyun.com/0P3xCxMZ](https://share.weiyun.com/0P3xCxMZ)
+- 演示视频：[https://share.weiyun.com/kfpNcv8t](https://share.weiyun.com/kfpNcv8t)
+- 安装包-安卓：[https://share.weiyun.com/3PbKoOZC](https://share.weiyun.com/3PbKoOZC)
+- 安装包-Windows：[https://share.weiyun.com/SsNw7UWC](https://share.weiyun.com/SsNw7UWC)
 
 提示：已知在新版Edge浏览器（Chromium内核版）上播放演示视频可能显示全部黑屏，请更换其他浏览器（已测试IE、Firefox、Chrome均正常），或者直接下载视频观看，给您带来的不便还请谅解。
 
@@ -26,6 +28,6 @@
 另外，击杀敌方玩家（3击）可以使对方玩家暂时失能，并获得1分加分。
 
 ## 关于桌面版
-本项目专为移动版进行开发，所有 UI 的尺寸均基于移动端设备进行设计，因此将不再提供桌面版的安装包。
+本项目专为移动版进行开发，所有 UI 的尺寸均基于移动端设备进行设计。
 
-不过，本项目中原有的桌面版操作仍然有效，你可以通过源代码编译来获得桌面端的可执行文件。
+不过，桌面版安装包依然提供。
