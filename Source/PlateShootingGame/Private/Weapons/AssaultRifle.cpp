@@ -13,6 +13,8 @@ void AAssaultRifle::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Out
 	
 	DOREPLIFETIME(AAssaultRifle, ShootingRange);
 	DOREPLIFETIME(AAssaultRifle, ShotImpulse);
+	DOREPLIFETIME(AAssaultRifle, NormalDamagePerFire);
+	DOREPLIFETIME(AAssaultRifle, CriticalDamagePerFire);
 }
 
 // This event is executed on server.
@@ -66,8 +68,8 @@ void AAssaultRifle::OnFire_Implementation()
 				{
 					DamageToApply = NormalDamagePerFire;
 				}
-				UGameplayStatics::ApplyDamage(HitActor, DamageToApply, WeaponOwner->GetInstigatorController(),
-					this, UDamageType::StaticClass());
+				UGameplayStatics::ApplyDamage(HitActor, DamageToApply * DamageRate,
+					WeaponOwner->GetInstigatorController(), this, UDamageType::StaticClass());
 				// Little question here: What is the difference between AActor::GetInstigatorController() and
 				// APawn::GetController() ? (F.Y.I: There is no GetController() here in C++ but have both in BP.)
 			}
