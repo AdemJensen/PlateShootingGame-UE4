@@ -7,6 +7,7 @@
 
 #include "Components/SphereComponent.h"
 #include "Pickables/PickableItem.h"
+#include "Sound/SoundCue.h"
 #include "Weapons/Weapon.h"
 #include "PickableWeapon.generated.h"
 
@@ -29,6 +30,12 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Status)
 	TArray<AActor*> ActorsWaitingToPickMeUp;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Settings)
+	USoundCue* PickupSoundEffect;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Settings)
+	USoundCue* DropSoundEffect;
+
 public:
 
 	virtual void OnPickup_Implementation(AActor* ActionActor) override;
@@ -42,5 +49,23 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category=Actions)
 	void OnPickupRangeEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	// Pickup Events
+	
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category=Process)
+	void HandlePickupActionOnServer(AActor* ActionActor);
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category=Process)
+    void SetSimulatePhysicsOnAll(const bool SimulatePhysics);
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category=Process)
+    void AnnounceLostTrackOnAll();
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category=Process)
+    void PlaySoundOnAll(const bool PickupSound);
+
+	// Drop Events
+
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category=Process)
+    void HandleDropActionOnServer();
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category=Process)
+    void AnnounceAbleToPickupOnAll();
 	
 };

@@ -18,6 +18,8 @@ AWeapon::AWeapon()
 
 	RootComponent = WeaponBody;
 	WeaponFireArrow->SetupAttachment(RootComponent);
+
+	WeaponBody->SetMassOverrideInKg(NAME_None, MassInKg);
 }
 
 // Called when the game starts or when spawned

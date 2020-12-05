@@ -102,26 +102,26 @@ public:
 	// The following functions are considered "Events", which should not be called directly from other BPs or Classes.
 
 	// Remember to call the ancestor's OnReloadStart()
-	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category="Events|Reload")
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category="Events|Reload")
 	virtual void OnReloadStart();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Events|Reload")
     void OnReloadStart_BP();
 
 	// Remember to call the ancestor's OnReloadComplete()
-	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category="Events|Reload")
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category="Events|Reload")
     virtual void OnReloadComplete();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Events|Reload")
     void OnReloadComplete_BP();
 
 	// Remember to call the ancestor's OnReloadInterrupt()
-	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category="Events|Reload")
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category="Events|Reload")
     virtual void OnReloadInterrupt();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Events|Reload")
     void OnReloadInterrupt_BP();
 
 	// Remember to call the ancestor's OnFire()
 	// Note that this is not the [fire] you would presume. This is invoked via TICK() or ACTION_FIRE()
-	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category="Events|Fire")
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category="Events|Fire")
     virtual void OnFire();
 	// Note that this is not the [fire] you would presume. This is invoked via TICK() or ACTION_FIRE()
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Events|Fire")

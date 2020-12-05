@@ -1,8 +1,11 @@
+
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Weapons/PickableWeapon.h"
 
+
+#include "Kismet/GameplayStatics.h"
 #include "Pickables/HoldableActor.h"
 
 APickableWeapon::APickableWeapon()
@@ -30,10 +33,12 @@ APickableWeapon::APickableWeapon()
 
 void APickableWeapon::OnPickup_Implementation(AActor* ActionActor)
 {
+	HandlePickupActionOnServer(ActionActor);
 }
 
 void APickableWeapon::OnDrop_Implementation()
 {
+	HandleDropActionOnServer();
 }
 
 FPickableItemDisplayData APickableWeapon::GetPickableInfo_Implementation()
@@ -43,12 +48,70 @@ FPickableItemDisplayData APickableWeapon::GetPickableInfo_Implementation()
 
 bool APickableWeapon::IsOpenForPickup_Implementation()
 {
-	return false;
+	return !IsValid(WeaponOwner);
+}
+
+void APickableWeapon::AnnounceAbleToPickupOnAll_Implementation()
+{
+	for (AActor* Target : ActorsWaitingToPickMeUp)
+	{
+		// This is guaranteed, but still, more check, more safe.
+		if (Target->GetClass()->ImplementsInterface(UHoldableActor::StaticClass()))
+		{
+			IHoldableActor* HoldableActor = Cast<IHoldableActor>(Target);
+			HoldableActor->Execute_OnAbleToPickupItem(Target, this);
+		}
+	}
+}
+
+void APickableWeapon::HandleDropActionOnServer_Implementation()
+{
+	WeaponOwner = nullptr;
+	SetSimulatePhysicsOnAll(true);
+	AnnounceAbleToPickupOnAll();
+	PlaySoundOnAll(false);
+}
+
+void APickableWeapon::PlaySoundOnAll_Implementation(const bool PickupSound)
+{
+	USoundCue* SoundToPlay = (PickupSound ? PickupSoundEffect : DropSoundEffect);
+	UWorld* World = GetWorld();
+	if (IsValid(SoundToPlay) && IsValid(World))
+	{
+		UGameplayStatics::PlaySoundAtLocation(World, SoundToPlay, WeaponBody->GetComponentLocation());
+	}
+}
+
+void APickableWeapon::AnnounceLostTrackOnAll_Implementation()
+{
+	for (AActor* Target : ActorsWaitingToPickMeUp)
+	{
+		// This is guaranteed, but still, more check, more safe.
+		if (Target->GetClass()->ImplementsInterface(UHoldableActor::StaticClass()))
+		{
+			IHoldableActor* HoldableActor = Cast<IHoldableActor>(Target);
+			HoldableActor->Execute_OnLostTrackOfItem(Target, this);
+		}
+	}
+}
+
+void APickableWeapon::SetSimulatePhysicsOnAll_Implementation(const bool SimulatePhysics)
+{
+	WeaponBody->SetSimulatePhysics(SimulatePhysics);
+	WeaponBody->SetEnableGravity(SimulatePhysics);
+}
+
+void APickableWeapon::HandlePickupActionOnServer_Implementation(AActor* ActionActor)
+{
+	WeaponOwner = ActionActor;
+	SetSimulatePhysicsOnAll(false);
+	AnnounceLostTrackOnAll();
+	PlaySoundOnAll(true);
 }
 
 void APickableWeapon::OnPickupRangeBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
-	const FHitResult& SweepResult)
+                                                               AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                                               const FHitResult& SweepResult)
 {
 	if (OtherActor->GetClass()->ImplementsInterface(UHoldableActor::StaticClass()))
 	{
@@ -68,7 +131,7 @@ void APickableWeapon::OnPickupRangeEndOverlap_Implementation(UPrimitiveComponent
 		if (ActorsWaitingToPickMeUp.Remove(OtherActor))
 		{
 			IHoldableActor* HoldableActor = Cast<IHoldableActor>(OtherActor);
-			HoldableActor->Execute_OnLostTrackOfItem(OtherActor, this);	// Why? what happens if ues OnLostTrackOfItem directly?
+			HoldableActor->Execute_OnLostTrackOfItem(OtherActor, this);		// Why? what happens if ues OnLostTrackOfItem directly?
 		}
 	}
 }
