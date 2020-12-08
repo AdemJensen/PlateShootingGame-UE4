@@ -23,20 +23,14 @@ public:
 	// Sets default values for this actor's properties
 	APickableWeapon();
 
-protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Components)
 	USphereComponent* PickupRange;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Status)
-	TArray<AActor*> ActorsWaitingToPickMeUp;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Settings)
 	USoundCue* PickupSoundEffect;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Settings)
 	USoundCue* DropSoundEffect;
-
-public:
 
 	virtual void OnPickup_Implementation(AActor* ActionActor) override;
 	virtual void OnDrop_Implementation() override;

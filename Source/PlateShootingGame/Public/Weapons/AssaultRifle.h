@@ -26,9 +26,9 @@ protected:
 	float CriticalDamagePerFire;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Settings|Fire")
-	float FireSoundEffect;
+	USoundCue* FireSoundEffect;
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Settings|Fire")
-	float MagEmptySoundEffect;
+	USoundCue* MagEmptySoundEffect;
 	
 public:
 	virtual void OnFire_Implementation() override;
@@ -42,13 +42,15 @@ public:
     void MakeFireEffect_BP(const bool Fired);
 
 	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category=Process)
-    virtual void MakeHitEffectOnAll(UPhysicalMaterial* HitPhysicalMaterial, AActor* HitActor,
+    virtual void MakeHitEffectOnAll(UPhysicalMaterial* HitPhysicalMaterial, FVector HitLocation, AActor* HitActor,
     	UPrimitiveComponent* HitComponent, FName HitBoneName);
 
 	// You need to implement this in BP.
 	// You can make some hit sound effects or FXs play here.
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category=Process)
-	void MakeHitEffect_BP(UPhysicalMaterial* HitPhysicalMaterial, AActor* HitActor,
+	void MakeHitEffect_BP(UPhysicalMaterial* HitPhysicalMaterial, FVector HitLocation, AActor* HitActor,
         UPrimitiveComponent* HitComponent, FName HitBoneName);
+
+	virtual void SetFireDirectionByCameraParameters(const FVector CameraLocation, const FRotator CameraRotation) override;
 	
 };

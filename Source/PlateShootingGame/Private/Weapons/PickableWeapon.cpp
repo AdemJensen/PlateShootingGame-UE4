@@ -29,6 +29,19 @@ APickableWeapon::APickableWeapon()
 	PickupRange->OnComponentBeginOverlap.AddDynamic(this, &APickableWeapon::OnPickupRangeBeginOverlap);
 	PickupRange->OnComponentEndOverlap.AddDynamic(this, &APickableWeapon::OnPickupRangeEndOverlap);
 
+	WeaponBody->SetCollisionObjectType(ECC_PhysicsBody);
+	WeaponBody->SetSimulatePhysics(true);
+	WeaponBody->SetEnableGravity(true);
+	WeaponBody->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	WeaponBody->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	WeaponBody->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	WeaponBody->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+	WeaponBody->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	WeaponBody->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	WeaponBody->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Overlap);
+	WeaponBody->SetCollisionResponseToChannel(ECC_Vehicle, ECR_Overlap);
+	WeaponBody->SetCollisionResponseToChannel(ECC_Destructible, ECR_Overlap);
+
 }
 
 void APickableWeapon::OnPickup_Implementation(AActor* ActionActor)
@@ -53,7 +66,9 @@ bool APickableWeapon::IsOpenForPickup_Implementation()
 
 void APickableWeapon::AnnounceAbleToPickupOnAll_Implementation()
 {
-	for (AActor* Target : ActorsWaitingToPickMeUp)
+	TArray<AActor*> OverlappedActors;
+	GetOverlappingActors(OverlappedActors, UHoldableActor::StaticClass());
+	for (AActor* Target : OverlappedActors)
 	{
 		// This is guaranteed, but still, more check, more safe.
 		if (Target->GetClass()->ImplementsInterface(UHoldableActor::StaticClass()))
@@ -84,7 +99,9 @@ void APickableWeapon::PlaySoundOnAll_Implementation(const bool PickupSound)
 
 void APickableWeapon::AnnounceLostTrackOnAll_Implementation()
 {
-	for (AActor* Target : ActorsWaitingToPickMeUp)
+	TArray<AActor*> OverlappedActors;
+	GetOverlappingActors(OverlappedActors, UHoldableActor::StaticClass());
+	for (AActor* Target : OverlappedActors)
 	{
 		// This is guaranteed, but still, more check, more safe.
 		if (Target->GetClass()->ImplementsInterface(UHoldableActor::StaticClass()))
@@ -113,25 +130,19 @@ void APickableWeapon::OnPickupRangeBeginOverlap_Implementation(UPrimitiveCompone
                                                                AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                                                const FHitResult& SweepResult)
 {
-	if (OtherActor->GetClass()->ImplementsInterface(UHoldableActor::StaticClass()))
+	if (Execute_IsOpenForPickup(this) && OtherActor->GetClass()->ImplementsInterface(UHoldableActor::StaticClass()))
 	{
-		if (ActorsWaitingToPickMeUp.AddUnique(OtherActor) != INDEX_NONE && !IsValid(WeaponOwner))
-		{
-			IHoldableActor* HoldableActor = Cast<IHoldableActor>(OtherActor);
-			HoldableActor->Execute_OnAbleToPickupItem(OtherActor, this);	// Why? what happens if ues OnAbleToPickupItem directly?
-		}
+		IHoldableActor* HoldableActor = Cast<IHoldableActor>(OtherActor);
+		HoldableActor->Execute_OnAbleToPickupItem(OtherActor, this);	// Why? what happens if ues OnAbleToPickupItem directly?
 	}
 }
 
 void APickableWeapon::OnPickupRangeEndOverlap_Implementation(UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (OtherActor->GetClass()->ImplementsInterface(UHoldableActor::StaticClass()))
+	if (Execute_IsOpenForPickup(this) && OtherActor->GetClass()->ImplementsInterface(UHoldableActor::StaticClass()))
 	{
-		if (ActorsWaitingToPickMeUp.Remove(OtherActor))
-		{
-			IHoldableActor* HoldableActor = Cast<IHoldableActor>(OtherActor);
-			HoldableActor->Execute_OnLostTrackOfItem(OtherActor, this);		// Why? what happens if ues OnLostTrackOfItem directly?
-		}
+		IHoldableActor* HoldableActor = Cast<IHoldableActor>(OtherActor);
+		HoldableActor->Execute_OnLostTrackOfItem(OtherActor, this);		// Why? what happens if ues OnLostTrackOfItem directly?
 	}
 }

@@ -20,6 +20,8 @@ void AAssaultRifle::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Out
 // This event is executed on server.
 void AAssaultRifle::OnFire_Implementation()
 {
+	Super::OnFire_Implementation();
+	//UE_LOG(LogTemp, Warning, TEXT("OnFire_Implementation"));
 	const float ActualUse = UseAmmo(1, false);
 	MakeFireEffectOnAll(ActualUse > 0);
 	UWorld* World = GetWorld();
@@ -30,13 +32,16 @@ void AAssaultRifle::OnFire_Implementation()
 			FHitResult HitResult;
 			const FVector GunPortLocation = WeaponFireArrow->GetComponentLocation();
 			const FVector AimingDirection = FireDirection.GetSafeNormal();
+			auto QueryParams = FCollisionQueryParams(FName(), true, this);
+			QueryParams.bReturnPhysicalMaterial = true;
 			if (World->LineTraceSingleByChannel(HitResult, GunPortLocation + AimingDirection * 6.0,
-				GunPortLocation + AimingDirection * ShootingRange, ECC_Visibility))
+				GunPortLocation + AimingDirection * ShootingRange, ECC_Visibility, QueryParams))
 			{
 				UPrimitiveComponent* HitComponent = HitResult.Component.Get();
 				AActor* HitActor = HitResult.Actor.Get();
 				const FName HitBone = HitResult.BoneName;
-				MakeHitEffectOnAll(HitResult.PhysMaterial.Get(), HitActor, HitComponent, HitBone);
+				MakeHitEffectOnAll(HitResult.PhysMaterial.Get(), HitResult.Location,
+					HitActor, HitComponent, HitBone);
 				
 				// Apply impulse on server
 				// This has been changed from the original blue print version, because all the object's movements
@@ -77,14 +82,23 @@ void AAssaultRifle::OnFire_Implementation()
 	}
 	else
 	{
+		//UE_LOG(LogTemp, Warning, TEXT("Actual_Use = 0"));
 		ActionStopFire();
 	}
 }
 
-void AAssaultRifle::MakeHitEffectOnAll_Implementation(UPhysicalMaterial* HitPhysicalMaterial, AActor* HitActor,
-        UPrimitiveComponent* HitComponent, FName HitBoneName)
+void AAssaultRifle::SetFireDirectionByCameraParameters(const FVector CameraLocation, const FRotator CameraRotation)
 {
-	MakeHitEffect_BP(HitPhysicalMaterial, HitActor, HitComponent, HitBoneName);
+	if (!CalculateFireDirectionByLineTrace(CameraLocation, CameraRotation, ShootingRange))
+	{
+		CalculateFireDirectionByAdjustmentAlgorithm(CameraLocation, CameraRotation);
+	}
+}
+
+void AAssaultRifle::MakeHitEffectOnAll_Implementation(UPhysicalMaterial* HitPhysicalMaterial, FVector HitLocation,
+	AActor* HitActor, UPrimitiveComponent* HitComponent, FName HitBoneName)
+{
+	MakeHitEffect_BP(HitPhysicalMaterial, HitLocation, HitActor, HitComponent, HitBoneName);
 }
 
 void AAssaultRifle::MakeFireEffectOnAll_Implementation(const bool Fired)

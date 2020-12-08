@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 
+
+#include "WeaponType.h"
 #include "Components/ArrowComponent.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
@@ -27,6 +29,11 @@ protected:
 	UArrowComponent* WeaponFireArrow;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Components)
 	USkeletalMeshComponent* WeaponBody;
+
+public:
+	
+	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere, Category=Settings)
+	EWeaponType WeaponType;
 
 	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere, Category=Status)
 	bool bFiring = false;
@@ -69,11 +76,26 @@ protected:
 	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere, Category="Settings")
 	float MassInKg;
 
+protected:
 	UPROPERTY(BlueprintAssignable, Category=ActionBindings)
 	FReloadInterruptSignature OnReloadInterrupted;
 
 	UPROPERTY(BlueprintAssignable, Category=ActionBindings)
 	FMagEmptySignature OnMagEmpty;
+
+	
+	// A preset bullet direction calculation function.
+	// This function calculates the direction by a line trace from camera, and set it to the FireDirection.
+	// If no trace result, the FireDirection will remain as-is.
+	// @return true if trace successful, and false if not traced anything.
+	UFUNCTION(BlueprintCallable, Category="Functions|Fire|Prefebs")
+    bool CalculateFireDirectionByLineTrace(const FVector CameraLocation, const FRotator CameraRotation, float TraceRange);
+
+	// A preset bullet direction calculation function.
+	// This function calculates the direction by using a equation, and set it to the FireDirection.
+	// The EQUATION is: CameraLocation + CameraDirection * 1000f - GunPortLocation
+	UFUNCTION(BlueprintCallable, Category="Functions|Fire|Prefebs")
+    void CalculateFireDirectionByAdjustmentAlgorithm(const FVector CameraLocation, const FRotator CameraRotation);
 
 public:	
 	// Called every frame
@@ -82,11 +104,11 @@ public:
 	// General functions
 	
 	UFUNCTION(BlueprintCallable, Category="Functions|Fire")
-	virtual FVector GetWeaponLocation();
+	virtual FVector GetGunPortLocation();
 	UFUNCTION(BlueprintCallable, Category="Functions|Fire")
-    virtual FRotator GetWeaponRotation();
+    virtual FRotator GetGunPortRotation();
 	UFUNCTION(BlueprintCallable, Category="Functions|Fire")
-    virtual FVector GetWeaponDirection();
+    virtual FVector GetGunPortDirection();
 
 	// This sets the AimingDirection variable from Rotation (World).
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category="Functions|Fire")
@@ -98,6 +120,16 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Functions|Fire")
     virtual float UseAmmo(const float ExpectedAmmo, bool bUsePartial);
+
+	// Set the fire bullet direction by these camera parameters.
+	// Must be implemented, and must be called in the Character BP in TICK().
+	// Previously defined in Character, but now moved here.
+	UFUNCTION(BlueprintCallable, Category="Functions|Fire")
+	virtual void SetFireDirectionByCameraParameters(const FVector CameraLocation, const FRotator CameraRotation);
+
+	// You can use that to check how much the adjusted value has effected the fire direction.
+	UFUNCTION(BlueprintCallable, Category="Functions|Fire|Prefebs")
+	float GetAdjustedFireBankAngle();
 
 	// The following functions are considered "Events", which should not be called directly from other BPs or Classes.
 
@@ -141,5 +173,7 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category="Actions|Reload")
     virtual void ActionStopReload(const bool GenerateInterruption);
     
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Status|Fire")
+    bool IsFiring();
 	
 };

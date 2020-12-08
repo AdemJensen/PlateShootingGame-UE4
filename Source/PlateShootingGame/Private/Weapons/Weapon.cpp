@@ -20,6 +20,8 @@ AWeapon::AWeapon()
 	WeaponFireArrow->SetupAttachment(RootComponent);
 
 	WeaponBody->SetMassOverrideInKg(NAME_None, MassInKg);
+
+	MagRemain = MagCapacity;
 }
 
 // Called when the game starts or when spawned
@@ -35,7 +37,8 @@ void AWeapon::Tick(const float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// Fire
-	if (GIsServer)
+	UWorld* World = GetWorld();
+	if (IsValid(World) && World->IsServer())
 	{
 		if (TimeSinceLastFire < FireInterval * 2)
 		{
@@ -57,6 +60,7 @@ void AWeapon::Tick(const float DeltaTime)
 void AWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AWeapon, WeaponType);
 	DOREPLIFETIME(AWeapon, bFiring);
 	DOREPLIFETIME(AWeapon, bReloading);
 	DOREPLIFETIME(AWeapon, MagRemain);
@@ -69,19 +73,19 @@ void AWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifeti
 	DOREPLIFETIME(AWeapon, MassInKg);
 }
 
-FVector AWeapon::GetWeaponLocation()
-{
-	return WeaponFireArrow->GetComponentLocation();
-}
-
-FRotator AWeapon::GetWeaponRotation()
+FRotator AWeapon::GetGunPortRotation()
 {
 	return WeaponFireArrow->GetComponentRotation();
 }
 
-FVector AWeapon::GetWeaponDirection()
+FVector AWeapon::GetGunPortDirection()
 {
 	return WeaponFireArrow->GetComponentRotation().RotateVector(FVector::ForwardVector);
+}
+
+FVector AWeapon::GetGunPortLocation()
+{
+	return WeaponFireArrow->GetComponentLocation();
 }
 
 void AWeapon::SetFireRotation_Implementation(const FRotator AimingRotation)
@@ -100,7 +104,7 @@ float AWeapon::UseAmmo(const float ExpectedAmmo, bool bUsePartial)
 	{
 		return ExpectedAmmo;
 	}
-	if (MagRemain < MagCapacity)
+	if (MagRemain < ExpectedAmmo)
 	{
 		if (bUsePartial)
 		{
@@ -112,6 +116,48 @@ float AWeapon::UseAmmo(const float ExpectedAmmo, bool bUsePartial)
 	}
 	MagRemain -= ExpectedAmmo;
     return ExpectedAmmo;
+}
+
+// This is the basic implementation of all the weapon fire directions.
+// This implementation usually won't work well in TPS games.
+void AWeapon::SetFireDirectionByCameraParameters(const FVector CameraLocation, const FRotator CameraRotation)
+{
+	FireDirection = GetGunPortDirection();
+}
+
+bool AWeapon::CalculateFireDirectionByLineTrace(const FVector CameraLocation, const FRotator CameraRotation, float TraceRange)
+{
+	const FVector CameraDirection = CameraRotation.RotateVector(FVector::ForwardVector).GetSafeNormal();
+	UWorld* World = GetWorld();
+	if (IsValid(World))
+	{
+		FHitResult HitResult;
+		if (World->LineTraceSingleByChannel(HitResult, CameraLocation + CameraDirection,
+            CameraLocation + CameraDirection * TraceRange, ECC_Visibility,
+            FCollisionQueryParams(FName(), true, this)))
+		{
+			SetFireRotation((HitResult.Location - GetGunPortLocation()).Rotation());
+			return true;
+		}
+	}
+	return false;
+}
+
+void AWeapon::CalculateFireDirectionByAdjustmentAlgorithm(const FVector CameraLocation, const FRotator CameraRotation)
+{
+	SetFireRotation((CameraRotation.RotateVector(FVector::ForwardVector).GetSafeNormal() * 1000 +
+        CameraLocation - GetGunPortLocation()).Rotation());
+}
+
+float AWeapon::GetAdjustedFireBankAngle()
+{
+	return FMath::Acos(FVector::DotProduct(GetGunPortDirection().GetSafeNormal(),
+		FireDirection.GetSafeNormal()));
+}
+
+bool AWeapon::IsFiring_Implementation()
+{
+	return bFiring;
 }
 
 void AWeapon::OnFire_Implementation()
@@ -136,7 +182,7 @@ void AWeapon::OnReloadStart_Implementation()
 
 void AWeapon::ActionFire_Implementation()
 {
-	UE_LOG(LogTemp, Display, TEXT("AWeapon::ActionFire()"));
+	//UE_LOG(LogTemp, Display, TEXT("AWeapon::ActionFire_Implementation"));
 	if (!bFiring)
 	{
 		if (bReloading)
@@ -156,6 +202,7 @@ void AWeapon::ActionFire_Implementation()
 
 void AWeapon::ActionStopFire_Implementation()
 {
+	//UE_LOG(LogTemp, Display, TEXT("AWeapon::ActionStopFire_Implementation"));
 	bFiring = false;
 }
 
