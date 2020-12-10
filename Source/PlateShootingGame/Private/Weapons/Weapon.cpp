@@ -12,6 +12,7 @@ AWeapon::AWeapon()
 	PrimaryActorTick.bCanEverTick = true;
 
 	bReplicates = true;
+    AActor::SetReplicateMovement(true);
 
 	WeaponBody = CreateDefaultSubobject<USkeletalMeshComponent>("WeaponBody");
 	WeaponFireArrow = CreateDefaultSubobject<UArrowComponent>("WeaponDirection");

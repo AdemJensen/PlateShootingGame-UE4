@@ -15,7 +15,7 @@
 
 #include "ShooterGameCharacterBase.generated.h"
 
-UCLASS()
+UCLASS(Blueprintable, BlueprintType)
 class PLATESHOOTINGGAME_API AShooterGameCharacterBase : public ACharacter, public IHoldableActor
 {
 	GENERATED_BODY()
@@ -37,7 +37,7 @@ public:
 	UCameraComponent* Camera;
 
 	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere, Category=Settings)
-	float MaxHealth;
+	float MaxHealth = 100;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Settings)
 	float MovementInputFactor = 1.0;
@@ -139,5 +139,28 @@ public:
     void HandleAction_Fire_StopOnServer();
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category=Process)
     void HandleAction_PickupOnServer();
+    
+    // Damage and death:
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	UFUNCTION(BlueprintImplementableEvent, Category=Actions)
+    void TakeDamage_BP(float DamageAmount, AController* EventInstigator, AActor* DamageCauser);
+
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category=Actions)
+	virtual void ActionDie(APawn* EventInstigator, AActor* DamageCauser);
+	UFUNCTION(BlueprintImplementableEvent, Category=Actions)
+    void ActionDie_BP_OnAll(APawn* EventInstigator, AActor* DamageCauser);
+	UFUNCTION(BlueprintImplementableEvent, Category=Actions)
+    void ActionDie_BP_OnServer(APawn* EventInstigator, AActor* DamageCauser);
+
+	UFUNCTION(Client, Reliable, BlueprintCallable, Category=Actions)
+    virtual void OnConfirmedKill(APawn* KilledPawn);
+	UFUNCTION(BlueprintImplementableEvent, Category=Actions)
+    void OnConfirmedKill_BP_OnClient(APawn* KilledPawn);
+
+	UFUNCTION(Client, Reliable, BlueprintCallable, Category=Actions)
+    virtual void OnConfirmedHit(APawn* HitPawn);
+	UFUNCTION(BlueprintImplementableEvent, Category=Actions)
+    void OnConfirmedHit_BP_OnClient(APawn* HitPawn);
 	
 };

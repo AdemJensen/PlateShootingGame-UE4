@@ -6,7 +6,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GeneratedCodeHelpers.h"
-#include "Characters/PickableInfoWidget.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Pickables/PickableItem.h"
 #include "Weapons/PickableWeapon.h"
@@ -19,8 +19,6 @@ AShooterGameCharacterBase::AShooterGameCharacterBase()
 
 	bReplicates = true;
 
-	Health = MaxHealth;
-
 	PickupFunctionModule = CreateDefaultSubobject<UPickupFunctionModule>("PickupFunctionModule");
 	PickupFunctionModule->OnPickupItemEvent.AddDynamic(this, &AShooterGameCharacterBase::HandlePickupOnServer);
 	
@@ -30,6 +28,21 @@ AShooterGameCharacterBase::AShooterGameCharacterBase()
 	Camera->SetupAttachment(SpringArm);
 
 	SpringArm->bUsePawnControlRotation = true;
+
+	// GetMesh()->SetMassOverrideInKg(NAME_None, 75.0);
+	GetMesh()->BodyInstance.bOverrideMass = true;
+	GetMesh()->BodyInstance.SetMassOverride(0.f);
+	// This has been replaced due to GEngine fault.
+	// For more info, see https://answers.unrealengine.com/questions/419964/gengine-not-initialized-problem.html
+	
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetCapsuleComponent()->SetCollisionObjectType(ECC_Pawn);
+	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Block);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	GetMesh()->SetCollisionResponseToAllChannels(ECR_Block);
 }
 
 void AShooterGameCharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -49,6 +62,8 @@ void AShooterGameCharacterBase::BeginPlay()
 	Super::BeginPlay();
 
 	UWorld* World = GetWorld();
+
+	Health = MaxHealth;
 	
 }
 
@@ -198,6 +213,75 @@ void AShooterGameCharacterBase::InputAction_Pickup()
 void AShooterGameCharacterBase::InputAction_Drop()
 {
 	HandleDropOnServer();
+}
+
+float AShooterGameCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+	AController* EventInstigator, AActor* DamageCauser)
+{
+	Health -= DamageAmount;
+	if (Health <= 0)
+	{
+		if (HasAuthority())
+		{
+			const auto KillerPawn = IsValid(EventInstigator) ? EventInstigator->GetPawn() : nullptr;
+			const auto KillerCharacter = IsValid(EventInstigator) ? EventInstigator->GetCharacter() : nullptr;
+			ActionDie_BP_OnServer(KillerPawn, DamageCauser);
+			ActionDie(KillerPawn, DamageCauser);
+			if (IsValid(KillerCharacter) && KillerCharacter->GetClass()->IsChildOf(StaticClass()))
+			{
+				Cast<AShooterGameCharacterBase>(KillerCharacter)->OnConfirmedKill(this);
+			}
+		}
+	}
+	else
+	{
+		if (HasAuthority())
+		{
+			const auto KillerCharacter = IsValid(EventInstigator) ? EventInstigator->GetCharacter() : nullptr;
+			if (IsValid(KillerCharacter) && KillerCharacter->GetClass()->IsChildOf(StaticClass()))
+			{
+				Cast<AShooterGameCharacterBase>(KillerCharacter)->OnConfirmedHit(this);
+			}
+		}
+	}
+	return DamageAmount;
+}
+
+void AShooterGameCharacterBase::OnConfirmedHit_Implementation(APawn* HitPawn)
+{
+	OnConfirmedHit_BP_OnClient(HitPawn);
+}
+
+void AShooterGameCharacterBase::OnConfirmedKill_Implementation(APawn* KilledPlayer)
+{
+	OnConfirmedKill_BP_OnClient(KilledPlayer);
+}
+
+void AShooterGameCharacterBase::ActionDie_Implementation(APawn* EventInstigator, AActor* DamageCauser)
+{
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetAllBodiesSimulatePhysics(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetEnableGravity(true);
+	GetMesh()->SetAllBodiesPhysicsBlendWeight(1.0);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	if (IsValid(WeaponInHand))
+	{
+		if (WeaponInHand->GetClass()->IsChildOf(APickableWeapon::StaticClass()))
+		{
+			HandleDropOnServer();
+		}
+	}
+	bDead = true;
+	AController* InstigatorController = GetController();
+	if (IsValid(InstigatorController) && InstigatorController->GetClass()->IsChildOf(APlayerController::StaticClass()))
+	{
+		DisableInput(Cast<APlayerController>(InstigatorController));
+	}
+	ActionDie_BP_OnAll(EventInstigator, DamageCauser);
 }
 
 void AShooterGameCharacterBase::HandleAction_PickupOnServer_Implementation()
