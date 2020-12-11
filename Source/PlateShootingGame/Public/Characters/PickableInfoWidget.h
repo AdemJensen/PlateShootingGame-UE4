@@ -20,6 +20,6 @@ class IPickableInfoWidget
 	GENERATED_IINTERFACE_BODY()
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category=Settings)
-	void ApplyPickableInfo(FPickableItemDisplayData PickableInfo);
+	void ApplyPickableInfo(AActor* ItemToPick);
 	
 };

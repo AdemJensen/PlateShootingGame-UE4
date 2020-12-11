@@ -85,8 +85,7 @@ bool UPickupFunctionModule::AddItemToList(AActor* ItemAbleToPickup)
         if (IsValid(PickableDisplayLabelClass) && bDisplayLabelClassProperlySetup)
         {
         	// Configure the display data for created widget if it has implemented the standard interface.
-        	Cast<IPickableInfoWidget>(SubWidget)->Execute_ApplyPickableInfo(SubWidget,
-        		Cast<IPickableItem>(ItemAbleToPickup)->Execute_GetPickableInfo(ItemAbleToPickup));
+        	Cast<IPickableInfoWidget>(SubWidget)->Execute_ApplyPickableInfo(SubWidget, ItemAbleToPickup);
         }
         PickableWidgets.Add(ItemAbleToPickup, SubWidget);
         DisplayBox->AddChildToVerticalBox(SubWidget)->SetPadding(FMargin(0, 0, 0, 20));

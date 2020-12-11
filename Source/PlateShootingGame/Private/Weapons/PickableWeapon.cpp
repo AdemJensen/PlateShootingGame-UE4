@@ -81,6 +81,7 @@ void APickableWeapon::AnnounceAbleToPickupOnAll_Implementation()
 
 void APickableWeapon::HandleDropActionOnServer_Implementation()
 {
+	ActionStopFire();
 	WeaponOwner = nullptr;
 	SetSimulatePhysicsOnAll(true);
 	AnnounceAbleToPickupOnAll();
