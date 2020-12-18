@@ -37,9 +37,9 @@
 - Update 2020-11-06：完成了手机端操作按钮及UI，添加排行榜、昵称修改面板等。
 
 ## 资源链接
-- 演示视频：[]()
-- 安装包-安卓：[]()
-- 安装包-Windows：[]()
+- 演示视频：[https://share.weiyun.com/6Tqo12yu](https://share.weiyun.com/6Tqo12yu)
+- 安装包-安卓：[https://share.weiyun.com/X1wOLNmQ](https://share.weiyun.com/X1wOLNmQ)
+- 安装包-Windows：[https://share.weiyun.com/BJnOhjbt](https://share.weiyun.com/BJnOhjbt)
 
 提示：已知在新版Edge浏览器（Chromium内核版）上播放演示视频可能显示全部黑屏，请更换其他浏览器（已测试IE、Firefox、Chrome均正常），或者直接下载视频观看，给您带来的不便还请谅解。
 
