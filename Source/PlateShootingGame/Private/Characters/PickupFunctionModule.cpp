@@ -70,7 +70,7 @@ void UPickupFunctionModule::TickComponent(float DeltaTime, ELevelTick TickType, 
 
 bool UPickupFunctionModule::AddItemToList(AActor* ItemAbleToPickup)
 {
-	if (!IsValid(DisplayBox) || !IsValid(PickableDisplayLabelClass))
+	if (bUsePickableWidget && (!IsValid(DisplayBox) || !IsValid(PickableDisplayLabelClass)))
 	{
 		return false;
 	}
@@ -96,7 +96,7 @@ bool UPickupFunctionModule::AddItemToList(AActor* ItemAbleToPickup)
 
 bool UPickupFunctionModule::RemoveItemFromList(AActor* ItemLostTrack)
 {
-	if (!IsValid(DisplayBox) || !IsValid(PickableDisplayLabelClass))
+	if (bUsePickableWidget && (!IsValid(DisplayBox) || !IsValid(PickableDisplayLabelClass)))
 	{
 		// To prevent the Display box becomes invalid afterwards.
 		return PickableItems.Remove(ItemLostTrack) > 0;
@@ -127,9 +127,9 @@ bool UPickupFunctionModule::PickupItem(AActor* ItemToPickup)
 
 bool UPickupFunctionModule::PickupFirstItem()
 {
-	UE_LOG(LogTemp, Warning, TEXT("PickupFirstItem"));
+	//UE_LOG(LogTemp, Warning, TEXT("PickupFirstItem"));
 	if (PickableItems.Num() == 0) return false;
-	UE_LOG(LogTemp, Warning, TEXT("Ahhhhh....."));
+	//UE_LOG(LogTemp, Warning, TEXT("Ahhhhh....."));
 	return PickupItem(PickableItems[0]);
 }
 

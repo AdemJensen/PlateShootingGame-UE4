@@ -5,13 +5,13 @@
 #include "CoreMinimal.h"
 
 
-#include "Weapons/WeaponType.h"
+#include "Weapons/Basics/WeaponType.h"
 #include "PickupFunctionModule.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Pickables/HoldableActor.h"
-#include "Weapons/Weapon.h"
+#include "Weapons/Basics/Weapon.h"
 
 #include "ShooterGameCharacterBase.generated.h"
 
@@ -56,6 +56,9 @@ public:
 	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere, Category="Status")
 	bool bDead;
 
+	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere, Category="Status")
+	bool bAiming;
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Status")
 	bool bFreeView;
 
@@ -130,6 +133,12 @@ public:
     virtual void InputAction_Pickup();
 	UFUNCTION(BlueprintCallable, Category=Inputs)
     virtual void InputAction_Drop();
+	UFUNCTION(BlueprintCallable, Category=Inputs)
+    virtual void InputAction_Aim();
+	UFUNCTION(Client, Reliable, BlueprintCallable, Category=Inputs)
+	virtual void InputAction_Aim_Start();
+	UFUNCTION(Client, Reliable, BlueprintCallable, Category=Inputs)
+    virtual void InputAction_Aim_Stop();
 
 	// Actions On Server:
 
@@ -139,12 +148,22 @@ public:
     void HandleAction_Fire_StopOnServer();
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category=Process)
     void HandleAction_PickupOnServer();
+
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category=Process)
+    void HandleAction_Aim_StartOnServer();
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category=Process)
+    void HandleAction_Aim_StopOnServer();
+	UFUNCTION(BlueprintImplementableEvent, Category=Process)
+    void HandleAction_Aim_Start_BP();
+	UFUNCTION(BlueprintImplementableEvent, Category=Process)
+    void HandleAction_Aim_Stop_BP();
+	
     
     // Damage and death:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	UFUNCTION(BlueprintImplementableEvent, Category=Actions)
-    void TakeDamage_BP(float DamageAmount, AController* EventInstigator, AActor* DamageCauser);
+    void TakeDamage_BP(float DamageAmount, APawn* EventInstigator, AActor* DamageCauser);
 
 	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category=Actions)
 	virtual void ActionDie(APawn* EventInstigator, AActor* DamageCauser);
@@ -159,8 +178,11 @@ public:
     void OnConfirmedKill_BP_OnClient(APawn* KilledPawn);
 
 	UFUNCTION(Client, Reliable, BlueprintCallable, Category=Actions)
-    virtual void OnConfirmedHit(APawn* HitPawn);
+    virtual void OnConfirmedHit(AActor* HitActor);
 	UFUNCTION(BlueprintImplementableEvent, Category=Actions)
-    void OnConfirmedHit_BP_OnClient(APawn* HitPawn);
+    void OnConfirmedHit_BP_OnClient(AActor* HitActor);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category=Calculations)
+	void AdjustShootingDirection();
 	
 };

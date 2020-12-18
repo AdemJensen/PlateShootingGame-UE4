@@ -94,10 +94,11 @@ void AAssaultRifle::SetFireDirectionByCameraParameters(const FVector CameraLocat
 	{
 		CalculateFireDirectionByAdjustmentAlgorithm(CameraLocation, CameraRotation);
 	}
+	ApplyFireDirectionRandomOffset(Precision);
 }
 
 void AAssaultRifle::MakeHitEffectOnAll_Implementation(UPhysicalMaterial* HitPhysicalMaterial, FVector HitLocation,
-	AActor* HitActor, UPrimitiveComponent* HitComponent, FName HitBoneName)
+                                                      AActor* HitActor, UPrimitiveComponent* HitComponent, FName HitBoneName)
 {
 	MakeHitEffect_BP(HitPhysicalMaterial, HitLocation, HitActor, HitComponent, HitBoneName);
 }

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Weapons/PickableWeapon.h"
+#include "Weapons/Basics/PickableWeapon.h"
 #include "AssaultRifle.generated.h"
 
 /**
@@ -19,6 +19,9 @@ protected:
 	float ShootingRange;
 	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere, Category="Settings|Fire")
 	float ShotImpulse;
+
+	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere, Category="Settings|Fire")
+	float Precision;
 
 	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere, Category="Settings|Fire")
 	float NormalDamagePerFire;
