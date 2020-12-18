@@ -135,9 +135,9 @@ public:
     virtual void InputAction_Drop();
 	UFUNCTION(BlueprintCallable, Category=Inputs)
     virtual void InputAction_Aim();
-	UFUNCTION(BlueprintCallable, Category=Inputs)
+	UFUNCTION(Client, Reliable, BlueprintCallable, Category=Inputs)
 	virtual void InputAction_Aim_Start();
-	UFUNCTION(BlueprintCallable, Category=Inputs)
+	UFUNCTION(Client, Reliable, BlueprintCallable, Category=Inputs)
     virtual void InputAction_Aim_Stop();
 
 	// Actions On Server:

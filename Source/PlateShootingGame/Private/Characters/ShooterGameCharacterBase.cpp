@@ -246,7 +246,7 @@ void AShooterGameCharacterBase::InputAction_Aim()
 	
 }
 
-void AShooterGameCharacterBase::InputAction_Aim_Start()
+void AShooterGameCharacterBase::InputAction_Aim_Start_Implementation()
 {
 	if (IsValid(WeaponInHand) && WeaponInHand->GetClass()->ImplementsInterface(UAimableWeapon::StaticClass()))
     {
@@ -258,7 +258,7 @@ void AShooterGameCharacterBase::InputAction_Aim_Start()
     }
 }
 
-void AShooterGameCharacterBase::InputAction_Aim_Stop()
+void AShooterGameCharacterBase::InputAction_Aim_Stop_Implementation()
 {
 	if (IsValid(WeaponInHand) && WeaponInHand->GetClass()->ImplementsInterface(UAimableWeapon::StaticClass()))
     {
