@@ -37,6 +37,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Status)
 	bool bShouldScanPickable = true;
 
+	// For AI controlled characters.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Settings)
+	bool bUsePickableWidget = true;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Status)
 	UVerticalBox* DisplayBox;
 

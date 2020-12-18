@@ -9,7 +9,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Pickables/PickableItem.h"
-#include "Weapons/PickableWeapon.h"
+#include "Weapons/Basics/AimableWeapon.h"
+#include "Weapons/Basics/PickableWeapon.h"
 
 // Sets default values
 AShooterGameCharacterBase::AShooterGameCharacterBase()
@@ -53,6 +54,7 @@ void AShooterGameCharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProp
 	DOREPLIFETIME(AShooterGameCharacterBase, YawAngle);
 	DOREPLIFETIME(AShooterGameCharacterBase, Health);
 	DOREPLIFETIME(AShooterGameCharacterBase, bDead);
+	DOREPLIFETIME(AShooterGameCharacterBase, bAiming);
 	DOREPLIFETIME(AShooterGameCharacterBase, WeaponInHand);
 }
 
@@ -89,7 +91,7 @@ void AShooterGameCharacterBase::Tick(float DeltaTime)
 		if (IsValid(WeaponInHand))
 		{
 			// UE_LOG(LogTemp, Error, TEXT("%s %s"), *GetName(), GIsServer ? TEXT("true") : TEXT("false"));
-			WeaponInHand->SetFireDirectionByCameraParameters(Camera->GetComponentLocation(), Camera->GetComponentRotation());
+			AdjustShootingDirection();
 		}
 	}
 }
@@ -118,6 +120,8 @@ void AShooterGameCharacterBase::SetupPlayerInputComponent(UInputComponent* Playe
 	// PlayerInputComponent->BindAction("FreeView", IE_Pressed, this, &AShooterGameCharacterBase::HandleDropOnServer);
 	PlayerInputComponent->BindAction("PickUp", IE_Pressed, this, &AShooterGameCharacterBase::InputAction_Pickup);
 	PlayerInputComponent->BindAction("DropWeapon", IE_Pressed, this, &AShooterGameCharacterBase::InputAction_Drop);
+	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AShooterGameCharacterBase::InputAction_Aim);
+
 }
 
 bool AShooterGameCharacterBase::IsAttacking()
@@ -206,50 +210,132 @@ void AShooterGameCharacterBase::InputAction_Fire_Stop()
 
 void AShooterGameCharacterBase::InputAction_Pickup()
 {
-	UE_LOG(LogTemp, Warning, TEXT("InputAction_Pickup"));
+	//UE_LOG(LogTemp, Warning, TEXT("InputAction_Pickup"));
 	HandleAction_PickupOnServer();
 }
 
 void AShooterGameCharacterBase::InputAction_Drop()
 {
+	if (IsValid(WeaponInHand))
+	{
+		InputAction_Aim_Stop();
+	}
 	HandleDropOnServer();
 }
 
-float AShooterGameCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
-	AController* EventInstigator, AActor* DamageCauser)
+void AShooterGameCharacterBase::InputAction_Aim()
 {
+	if (IsValid(WeaponInHand) && WeaponInHand->GetClass()->ImplementsInterface(UAimableWeapon::StaticClass()))
+	{
+		if (bAiming)
+        {
+			if (Cast<IAimableWeapon>(WeaponInHand)->Execute_CanAdjustNow(WeaponInHand, this, WeaponInHand))
+			{
+				Cast<IAimableWeapon>(WeaponInHand)->Execute_OnAdjustScope(WeaponInHand, this, WeaponInHand);
+			}
+			else
+			{
+				InputAction_Aim_Stop();
+			}
+        }
+        else
+        {
+        	InputAction_Aim_Start();
+        }
+	}
+	
+}
+
+void AShooterGameCharacterBase::InputAction_Aim_Start()
+{
+	if (IsValid(WeaponInHand) && WeaponInHand->GetClass()->ImplementsInterface(UAimableWeapon::StaticClass()))
+    {
+		//UE_LOG(LogTemp, Warning, TEXT("Entering Aim"));
+		bAiming = true;
+    	Cast<IAimableWeapon>(WeaponInHand)->Execute_OnEnterScope(WeaponInHand, this, WeaponInHand);
+		HandleAction_Aim_Start_BP();
+		HandleAction_Aim_StartOnServer();
+    }
+}
+
+void AShooterGameCharacterBase::InputAction_Aim_Stop()
+{
+	if (IsValid(WeaponInHand) && WeaponInHand->GetClass()->ImplementsInterface(UAimableWeapon::StaticClass()))
+    {
+		//UE_LOG(LogTemp, Warning, TEXT("Exiting Aim"));
+		bAiming = false;
+    	Cast<IAimableWeapon>(WeaponInHand)->Execute_OnExitScope(WeaponInHand, this, WeaponInHand);
+		HandleAction_Aim_Stop_BP();
+		HandleAction_Aim_StopOnServer();
+    }
+}
+
+void AShooterGameCharacterBase::HandleAction_Aim_StartOnServer_Implementation()
+{
+	bAiming = true;
+}
+
+void AShooterGameCharacterBase::HandleAction_Aim_StopOnServer_Implementation()
+{
+	bAiming = false;
+}
+
+float AShooterGameCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+                                            AController* EventInstigator, AActor* DamageCauser)
+{
+	if (bDead)
+	{
+		return 0;
+	}
 	Health -= DamageAmount;
+	const auto KillerPawn = IsValid(EventInstigator) ? EventInstigator->GetPawn() : nullptr;
+	const auto KillerCharacter = IsValid(EventInstigator) ? EventInstigator->GetCharacter() : nullptr;
+	TakeDamage_BP(DamageAmount, KillerPawn, DamageCauser);
 	if (Health <= 0)
 	{
-		if (HasAuthority())
-		{
-			const auto KillerPawn = IsValid(EventInstigator) ? EventInstigator->GetPawn() : nullptr;
-			const auto KillerCharacter = IsValid(EventInstigator) ? EventInstigator->GetCharacter() : nullptr;
-			ActionDie_BP_OnServer(KillerPawn, DamageCauser);
-			ActionDie(KillerPawn, DamageCauser);
+	 	if (HasAuthority())
+	 	{
+	 		bDead = true;
+	 		ActionDie_BP_OnServer(KillerPawn, DamageCauser);
+	 		ActionDie(KillerPawn, DamageCauser);
 			if (IsValid(KillerCharacter) && KillerCharacter->GetClass()->IsChildOf(StaticClass()))
 			{
 				Cast<AShooterGameCharacterBase>(KillerCharacter)->OnConfirmedKill(this);
 			}
-		}
+	 	}
 	}
 	else
 	{
 		if (HasAuthority())
 		{
-			const auto KillerCharacter = IsValid(EventInstigator) ? EventInstigator->GetCharacter() : nullptr;
-			if (IsValid(KillerCharacter) && KillerCharacter->GetClass()->IsChildOf(StaticClass()))
-			{
-				Cast<AShooterGameCharacterBase>(KillerCharacter)->OnConfirmedHit(this);
-			}
-		}
+	 		if (IsValid(KillerCharacter) && KillerCharacter->GetClass()->IsChildOf(StaticClass()))
+	 		{
+	 			Cast<AShooterGameCharacterBase>(KillerCharacter)->OnConfirmedHit(this);
+	 		}
+	 	}
 	}
 	return DamageAmount;
 }
 
-void AShooterGameCharacterBase::OnConfirmedHit_Implementation(APawn* HitPawn)
+void AShooterGameCharacterBase::AdjustShootingDirection_Implementation()
 {
-	OnConfirmedHit_BP_OnClient(HitPawn);
+	if (WeaponInHand->GetClass()->ImplementsInterface(UAimableWeapon::StaticClass()) && bAiming)
+	{
+		Cast<IAimableWeapon>(WeaponInHand)->Execute_SetFireDirectionByAimParameters(WeaponInHand, this, WeaponInHand);
+	}
+	else
+	{
+		WeaponInHand->SetFireDirectionByCameraParameters(Camera->GetComponentLocation(), Camera->GetComponentRotation());
+	}
+	if (!bAiming)
+	{
+		WeaponInHand->ApplyFireDirectionRandomOffset(2);
+	}
+}
+
+void AShooterGameCharacterBase::OnConfirmedHit_Implementation(AActor* HitActor)
+{
+	OnConfirmedHit_BP_OnClient(HitActor);
 }
 
 void AShooterGameCharacterBase::OnConfirmedKill_Implementation(APawn* KilledPlayer)
@@ -259,7 +345,11 @@ void AShooterGameCharacterBase::OnConfirmedKill_Implementation(APawn* KilledPlay
 
 void AShooterGameCharacterBase::ActionDie_Implementation(APawn* EventInstigator, AActor* DamageCauser)
 {
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
 	GetMesh()->SetAllBodiesSimulatePhysics(true);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
@@ -272,7 +362,8 @@ void AShooterGameCharacterBase::ActionDie_Implementation(APawn* EventInstigator,
 	{
 		if (WeaponInHand->GetClass()->IsChildOf(APickableWeapon::StaticClass()))
 		{
-			HandleDropOnServer();
+			InputAction_Drop();
+			//HandleDropOnServer();
 		}
 	}
 	bDead = true;
@@ -286,7 +377,7 @@ void AShooterGameCharacterBase::ActionDie_Implementation(APawn* EventInstigator,
 
 void AShooterGameCharacterBase::HandleAction_PickupOnServer_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("HandleAction_PickupOnServer_Implementation"));
+	//UE_LOG(LogTemp, Warning, TEXT("HandleAction_PickupOnServer_Implementation"));
 	PickupFunctionModule->PickupFirstItem();
 }
 
@@ -311,6 +402,11 @@ void AShooterGameCharacterBase::CallItemInterfaceFunctionOnAll_Implementation(co
 	IPickableItem* ActionItem = Cast<IPickableItem>(ItemForAction);
 	if (Pickup)
 	{
+		if (!IsValid(ItemForAction))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Error when executing CallItemInterfaceFunctionOnAll_Implementation: ItemForAction is Null, the env is %s"), GetWorld()->IsServer() ? TEXT("Server") : TEXT("Client"));
+			return;
+		}
 		ActionItem->Execute_OnPickup(ItemForAction, this);
 	}
 	else
@@ -352,7 +448,8 @@ void AShooterGameCharacterBase::HandlePickupOnServer_Implementation(AActor* Item
 		AWeapon* WeaponToPickup = Cast<AWeapon>(ItemToPickup);
 		if (IsValid(WeaponInHand))
 		{
-			HandleDropOnServer();		// No worries to the execution sequence because they are both on server, which
+			InputAction_Drop();
+			//HandleDropOnServer();		// No worries to the execution sequence because they are both on server, which
 										// doesn't cause network replication and delay.
 		}
 		WeaponInHand = WeaponToPickup;

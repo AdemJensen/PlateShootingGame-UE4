@@ -27,5 +27,5 @@ void ATestinActor::Tick(float DeltaTime)
 
 void ATestinActor::OnPickup_Implementation(ACharacter* ActionCharacter)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Executing OnPickup_Native"));
+	//UE_LOG(LogTemp, Warning, TEXT("Executing OnPickup_Native"));
 }
